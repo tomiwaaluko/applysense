@@ -63,6 +63,7 @@ model User {
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
+    jobs          Job[]
 }
 
 model VerificationToken {
@@ -81,7 +82,11 @@ model Job {
   status    String
   date      DateTime
   notes     String?
-  imageUrl  String
+  imageUrl  String?
   createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
 }
 
