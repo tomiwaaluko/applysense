@@ -11,16 +11,11 @@ export interface ParsedJobData {
   sourceImageUrl?: string;
 }
 
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY ?? "",
-});
-
-/**
- * Check if OpenAI API is available
- */
-function isOpenAIAvailable(): boolean {
-  return Boolean(env.OPENAI_API_KEY);
-}
+const openai = env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: env.OPENAI_API_KEY as string,
+    })
+  : null;
 
 /**
  * Extract job information from screenshot using GPT-4 Vision
@@ -28,6 +23,11 @@ function isOpenAIAvailable(): boolean {
 export async function extractJobDataWithGPT4Vision(
   imageUrl: string,
 ): Promise<ParsedJobData | null> {
+  if (!openai) {
+    console.warn("OpenAI client not initialized - API key missing");
+    return null;
+  }
+
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4-vision-preview",

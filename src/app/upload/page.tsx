@@ -36,7 +36,14 @@ export default function UploadPage() {
   };
 
   const handleUploadError = (error: string) => {
-    setUploadError(error);
+    // Provide helpful message for common RLS error
+    if (error.includes("row-level security policy") || error.includes("RLS")) {
+      setUploadError(
+        "Upload blocked by database security. Please check the FIX_UPLOAD_ERROR.md file for setup instructions."
+      );
+    } else {
+      setUploadError(error);
+    }
     setUploadedImageUrl(null);
   };
 
