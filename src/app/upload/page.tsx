@@ -39,7 +39,7 @@ export default function UploadPage() {
     // Provide helpful message for common RLS error
     if (error.includes("row-level security policy") || error.includes("RLS")) {
       setUploadError(
-        "Upload blocked by database security. Please check the FIX_UPLOAD_ERROR.md file for setup instructions."
+        "Upload blocked by database security. Please check the FIX_UPLOAD_ERROR.md file for setup instructions.",
       );
     } else {
       setUploadError(error);
