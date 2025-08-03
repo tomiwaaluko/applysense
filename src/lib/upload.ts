@@ -8,7 +8,7 @@ export async function uploadScreenshot(
   const fileName = `${jobId}-${Date.now()}.${fileExt}`;
   const filePath = `screenshots/${fileName}`;
 
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from("screenshots")
     .upload(filePath, file);
 

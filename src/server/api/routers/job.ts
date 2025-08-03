@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { extractJobDataFromScreenshot } from "~/lib/ocr";
 
 export const jobRouter = createTRPCRouter({
   create: protectedProcedure
@@ -78,5 +79,21 @@ export const jobRouter = createTRPCRouter({
           userId: ctx.session.user.id,
         },
       });
+    }),
+
+  // OCR extraction endpoint
+  extractFromScreenshot: protectedProcedure
+    .input(z.object({ imageUrl: z.string().url() }))
+    .mutation(async ({ input }) => {
+      try {
+        const extractedData = await extractJobDataFromScreenshot(
+          input.imageUrl,
+        );
+        return extractedData;
+      } catch (error) {
+        throw new Error(
+          `Failed to extract job data: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
     }),
 });
