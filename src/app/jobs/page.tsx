@@ -109,6 +109,12 @@ export default function JobTracker() {
         <h1 className="text-3xl font-bold">Job Tracker</h1>
         <div className="flex gap-3">
           <a
+            href="/dashboard"
+            className="rounded bg-purple-500 px-4 py-2 text-white hover:bg-purple-600"
+          >
+            📊 Dashboard
+          </a>
+          <a
             href="/upload"
             className="rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
           >

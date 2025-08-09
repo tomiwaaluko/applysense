@@ -1,69 +1,107 @@
 import Link from "next/link";
-
-import { LatestPost } from "~/app/_components/post";
+import Image from "next/image";
 import { auth } from "~/server/auth";
-import { api, HydrateClient } from "~/trpc/server";
 
 export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
 
-  if (session?.user) {
-    void api.post.getLatest.prefetch();
-  }
-
   return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-          </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
-            </p>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="mb-6 text-5xl font-bold text-gray-900">Job Tracker</h1>
+          <p className="mx-auto mb-8 max-w-2xl text-xl text-gray-600">
+            Track your job applications with AI-powered screenshot analysis.
+            Upload job postings and let AI extract the details automatically.
+          </p>
 
-            <div className="flex flex-col items-center justify-center gap-4">
-              <p className="text-center text-2xl text-white">
-                {session && <span>Logged in as {session.user?.name}</span>}
+          {session?.user ? (
+            <div className="space-y-6">
+              <div className="mb-8 flex items-center justify-center gap-4">
+                <div className="text-center">
+                  {session.user.image && (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name ?? "User"}
+                      width={64}
+                      height={64}
+                      className="mx-auto mb-2 h-16 w-16 rounded-full"
+                    />
+                  )}
+                  <p className="text-gray-700">
+                    Welcome back, {session.user.name}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                >
+                  📊 View Dashboard
+                </Link>
+                <Link
+                  href="/upload"
+                  className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-6 py-3 text-base font-medium text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+                >
+                  📸 Upload Screenshot
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="inline-flex items-center rounded-md border border-gray-300 bg-white px-6 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                >
+                  + Add Job Manually
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <p className="mb-6 text-gray-600">
+                Sign in to start tracking your job applications
               </p>
               <Link
-                href={session ? "/api/auth/signout" : "/api/auth/signin"}
-                className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+                href="/api/auth/signin"
+                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
               >
-                {session ? "Sign out" : "Sign in"}
+                🔐 Sign In with Google
               </Link>
             </div>
-          </div>
+          )}
 
-          {session?.user && <LatestPost />}
+          <div className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-3">
+            <div className="rounded-lg bg-white p-6 text-center shadow-sm">
+              <div className="mb-4 text-3xl">📸</div>
+              <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                Upload Screenshots
+              </h3>
+              <p className="text-gray-600">
+                Drag and drop job posting screenshots for instant analysis
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-white p-6 text-center shadow-sm">
+              <div className="mb-4 text-3xl">🤖</div>
+              <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                AI Extraction
+              </h3>
+              <p className="text-gray-600">
+                Let AI automatically extract company, position, and details
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-white p-6 text-center shadow-sm">
+              <div className="mb-4 text-3xl">📊</div>
+              <h3 className="mb-2 text-xl font-semibold text-gray-900">
+                Track Progress
+              </h3>
+              <p className="text-gray-600">
+                Monitor applications, interviews, and offers in one dashboard
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
-    </HydrateClient>
+      </div>
+    </main>
   );
 }

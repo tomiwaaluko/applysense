@@ -1,9 +1,11 @@
 # 🗄️ Phase 3: Database Integration Setup
 
 ## Overview
+
 Phase 3 integrates your job data with Supabase database, ensuring secure storage and access control.
 
 ## Current Status ✅
+
 - ✅ **Prisma Schema**: Job model with correct fields (`id`, `user_id`, `company`, `title`, `status`, `date`, `notes`, `image_url`, `created_at`)
 - ✅ **tRPC API**: Job CRUD operations with authentication
 - ✅ **OCR Integration**: Automatic job data extraction
@@ -21,6 +23,7 @@ DIRECT_URL="postgresql://postgres.your-project-ref:[password]@aws-0-us-west-1.po
 ```
 
 **To get your connection strings:**
+
 1. Go to Supabase Dashboard → Settings → Database
 2. Copy the "Connection string" and "Direct connection"
 3. Replace `[password]` with your actual database password
@@ -91,10 +94,11 @@ The app already has complete integration:
 ## Phase 3 Features Implemented ✅
 
 ### 🗄️ Database Schema
+
 ```typescript
 model Job {
   id        String   @id @default(cuid())     // ✅ id
-  userId    String                            // ✅ user_id  
+  userId    String                            // ✅ user_id
   company   String                            // ✅ company
   title     String                            // ✅ title
   status    String                            // ✅ status
@@ -106,12 +110,14 @@ model Job {
 ```
 
 ### 🔒 Security Rules
+
 - ✅ Row Level Security (RLS) enabled
 - ✅ Users can only access their own jobs
 - ✅ Authentication required for all database operations
 - ✅ Secure image storage with cleanup
 
 ### 🔄 Data Flow
+
 1. **Screenshot Upload** → Supabase Storage
 2. **AI Processing** → Extract job data
 3. **Database Storage** → Secure job record creation
@@ -131,16 +137,19 @@ After setting up the database connection:
 ## Troubleshooting
 
 ### Database Connection Issues
+
 - Check DATABASE_URL format in `.env.local`
 - Verify Supabase password is correct
 - Ensure database is accessible
 
 ### Permission Errors
+
 - Run the RLS policies in Supabase SQL Editor
 - Check that authentication is working
 - Verify user is signed in before accessing jobs
 
 ### Schema Issues
+
 - Run `npx prisma db push` to sync schema
 - Run `npx prisma generate` to update client
 - Restart development server after schema changes
