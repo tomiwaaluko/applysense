@@ -19,11 +19,67 @@ type Job = {
   createdAt: Date;
 };
 
+type JobTemplate = {
+  id: string;
+  name: string;
+  title: string;
+  status: string;
+  notes: string;
+};
+
+const JOB_TEMPLATES: JobTemplate[] = [
+  {
+    id: "swe",
+    name: "Software Engineer",
+    title: "Software Engineer",
+    status: "Applied",
+    notes: "Full-stack development role with React and Node.js",
+  },
+  {
+    id: "fe",
+    name: "Frontend Developer",
+    title: "Frontend Developer",
+    status: "Applied",
+    notes: "Frontend development with React, TypeScript, and modern CSS",
+  },
+  {
+    id: "be",
+    name: "Backend Developer",
+    title: "Backend Developer",
+    status: "Applied",
+    notes: "Backend development with Node.js, Python, or Java",
+  },
+  {
+    id: "fs",
+    name: "Full Stack Developer",
+    title: "Full Stack Developer",
+    status: "Applied",
+    notes: "End-to-end development with modern tech stack",
+  },
+  {
+    id: "pm",
+    name: "Product Manager",
+    title: "Product Manager",
+    status: "Applied",
+    notes:
+      "Product strategy, roadmap planning, and cross-functional collaboration",
+  },
+  {
+    id: "ds",
+    name: "Data Scientist",
+    title: "Data Scientist",
+    status: "Applied",
+    notes: "Machine learning, data analysis, and statistical modeling",
+  },
+];
+
 export default function JobTracker() {
   const searchParams = useSearchParams();
   const uploadedImageUrl = searchParams.get("imageUrl");
+  const editJobId = searchParams.get("edit");
 
   const [showForm, setShowForm] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [formData, setFormData] = useState({
     company: "",
     title: "",
@@ -33,7 +89,43 @@ export default function JobTracker() {
     imageUrl: "",
   });
 
-  // Auto-open form and set data if coming from upload page
+  const utils = api.useUtils();
+  const { data: jobs, isLoading } = api.job.getAll.useQuery();
+  const createJob = api.job.create.useMutation({
+    onSuccess: () => {
+      void utils.job.getAll.invalidate();
+      setShowForm(false);
+      resetForm();
+    },
+  });
+  const updateJob = api.job.update.useMutation({
+    onSuccess: () => {
+      void utils.job.getAll.invalidate();
+      setShowForm(false);
+      resetForm();
+    },
+  });
+  const deleteJob = api.job.delete.useMutation({
+    onSuccess: () => {
+      void utils.job.getAll.invalidate();
+    },
+  });
+
+  const isEditing = !!editJobId;
+
+  const resetForm = () => {
+    setFormData({
+      company: "",
+      title: "",
+      status: "Applied",
+      date: new Date().toISOString().split("T")[0],
+      notes: "",
+      imageUrl: "",
+    });
+    setSelectedTemplate("");
+  };
+
+  // Auto-open form and set data if coming from upload page or editing
   useEffect(() => {
     if (uploadedImageUrl) {
       const newFormData = {
@@ -48,38 +140,52 @@ export default function JobTracker() {
 
       setFormData(newFormData);
       setShowForm(true);
+    } else if (editJobId && jobs) {
+      const jobToEdit = jobs.find((job) => job.id === editJobId);
+      if (jobToEdit) {
+        setFormData({
+          company: jobToEdit.company,
+          title: jobToEdit.title,
+          status: jobToEdit.status,
+          date: new Date(jobToEdit.date).toISOString().split("T")[0],
+          notes: jobToEdit.notes ?? "",
+          imageUrl: jobToEdit.imageUrl ?? "",
+        });
+        setShowForm(true);
+      }
     }
-  }, [uploadedImageUrl, searchParams]);
+  }, [uploadedImageUrl, searchParams, editJobId, jobs]);
 
-  const utils = api.useUtils();
-  const { data: jobs, isLoading } = api.job.getAll.useQuery();
-  const createJob = api.job.create.useMutation({
-    onSuccess: () => {
-      void utils.job.getAll.invalidate();
-      setShowForm(false);
-      setFormData({
-        company: "",
-        title: "",
-        status: "Applied",
-        date: new Date().toISOString().split("T")[0],
-        notes: "",
-        imageUrl: "",
-      });
-    },
-  });
-  const deleteJob = api.job.delete.useMutation({
-    onSuccess: () => {
-      void utils.job.getAll.invalidate();
-    },
-  });
+  const handleTemplateSelect = (templateId: string) => {
+    const template = JOB_TEMPLATES.find((t) => t.id === templateId);
+    if (template) {
+      setFormData((prev) => ({
+        ...prev,
+        title: template.title,
+        status: template.status,
+        notes: template.notes,
+      }));
+      setSelectedTemplate(templateId);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createJob.mutate({
-      ...formData,
-      date: new Date(formData.date!),
-      imageUrl: formData.imageUrl || undefined,
-    });
+
+    if (isEditing) {
+      updateJob.mutate({
+        id: editJobId,
+        ...formData,
+        date: new Date(formData.date!),
+        imageUrl: formData.imageUrl || undefined,
+      });
+    } else {
+      createJob.mutate({
+        ...formData,
+        date: new Date(formData.date!),
+        imageUrl: formData.imageUrl || undefined,
+      });
+    }
   };
 
   const handleDelete = async (job: Job) => {
@@ -121,10 +227,13 @@ export default function JobTracker() {
             📸 Upload Screenshot
           </a>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              setShowForm(!showForm);
+              if (!showForm) resetForm();
+            }}
             className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
           >
-            {showForm ? "Cancel" : "Add Job"}
+            {showForm ? "Cancel" : isEditing ? "Edit Job" : "Add Job"}
           </button>
         </div>
       </div>
@@ -162,101 +271,198 @@ export default function JobTracker() {
       )}
 
       {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          className="mb-8 rounded-lg border bg-gray-50 p-6"
-        >
-          <div className="grid grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Company"
-              value={formData.company}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, company: e.target.value }))
-              }
-              className="rounded border p-2"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Job Title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, title: e.target.value }))
-              }
-              className="rounded border p-2"
-              required
-            />
-            <select
-              value={formData.status}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, status: e.target.value }))
-              }
-              className="rounded border p-2"
-            >
-              <option value="Applied">Applied</option>
-              <option value="Interview">Interview</option>
-              <option value="Offer">Offer</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, date: e.target.value }))
-              }
-              className="rounded border p-2"
-              required
-            />
-          </div>
-          <textarea
-            placeholder="Notes"
-            value={formData.notes}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, notes: e.target.value }))
-            }
-            className="mt-4 w-full rounded border p-2"
-            rows={3}
-          />
-
-          <div className="mt-4">
-            <FileUpload
-              onUploadComplete={handleUploadComplete}
-              onUploadError={handleUploadError}
-              className="mb-4"
-              showPreview={false}
-            />
-            {formData.imageUrl && (
-              <div className="mt-2">
-                <Image
-                  src={formData.imageUrl}
-                  alt="Screenshot preview"
-                  width={320}
-                  height={240}
-                  className="h-auto max-w-xs rounded border object-contain"
-                  unoptimized
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, imageUrl: "" }))
-                  }
-                  className="ml-2 text-sm text-red-500"
-                >
-                  Remove
-                </button>
+        <div className="mb-8 space-y-6">
+          {/* Job Templates */}
+          {!isEditing && !uploadedImageUrl && (
+            <div className="rounded-lg border bg-white p-6">
+              <h3 className="mb-4 text-lg font-medium text-gray-900">
+                Quick Start Templates
+              </h3>
+              <p className="mb-4 text-sm text-gray-600">
+                Choose a template to pre-fill common job details, or create from
+                scratch.
+              </p>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {JOB_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => {
+                      handleTemplateSelect(template.id);
+                      setSelectedTemplate(template.id);
+                    }}
+                    className={`rounded-lg border p-4 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 ${
+                      selectedTemplate === template.id
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <h4 className="font-medium text-gray-900">
+                      {template.name}
+                    </h4>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {template.notes}
+                    </p>
+                  </button>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={createJob.isPending}
-            className="mt-4 rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 disabled:bg-gray-300"
+          <form
+            onSubmit={handleSubmit}
+            className="rounded-lg border bg-white p-6"
           >
-            {createJob.isPending ? "Adding..." : "Add Job"}
-          </button>
-        </form>
+            <h3 className="mb-4 text-lg font-medium text-gray-900">
+              {isEditing ? "Edit Job Application" : "Add New Job Application"}
+            </h3>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Company *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Company Name"
+                  value={formData.company}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      company: e.target.value,
+                    }))
+                  }
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Job Title *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Position Title"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, status: e.target.value }))
+                  }
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="Applied">📝 Applied</option>
+                  <option value="Interview">🎯 Interview</option>
+                  <option value="Offer">🎉 Offer</option>
+                  <option value="Rejected">❌ Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Application Date *
+                </label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, date: e.target.value }))
+                  }
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Notes
+              </label>
+              <textarea
+                placeholder="Add notes about the position, requirements, interview details, etc."
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                }
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                rows={3}
+              />
+            </div>
+
+            <div className="mt-6">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Screenshot (Optional)
+              </label>
+              <FileUpload
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+                className="mb-4"
+                showPreview={false}
+              />
+              {formData.imageUrl && (
+                <div className="mt-2">
+                  <Image
+                    src={formData.imageUrl}
+                    alt="Screenshot preview"
+                    width={320}
+                    height={240}
+                    className="h-auto max-w-xs rounded border object-contain"
+                    unoptimized
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, imageUrl: "" }))
+                    }
+                    className="ml-2 text-sm text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="submit"
+                disabled={createJob.isPending || updateJob.isPending}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:bg-gray-300"
+              >
+                {createJob.isPending || updateJob.isPending
+                  ? isEditing
+                    ? "Updating..."
+                    : "Adding..."
+                  : isEditing
+                    ? "Update Job"
+                    : "Add Job"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  resetForm();
+                }}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
       )}
 
       <div className="grid gap-4">

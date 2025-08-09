@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { deleteScreenshot } from "~/lib/upload";
+import { NotificationReminders } from "~/components/NotificationReminders";
 
 type Job = {
   id: string;
@@ -24,7 +24,6 @@ type SortBy = "date" | "company" | "title" | "status";
 type SortOrder = "asc" | "desc";
 
 export default function Dashboard() {
-  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<SortBy>("date");
@@ -58,8 +57,7 @@ export default function Dashboard() {
         (job) =>
           job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
           job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (job.notes &&
-            job.notes.toLowerCase().includes(searchTerm.toLowerCase())),
+          job.notes?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -88,18 +86,54 @@ export default function Dashboard() {
     return filtered;
   }, [jobs, filterStatus, searchTerm, sortBy, sortOrder]);
 
-  // Get status counts for filter badges
+  // Get status counts and advanced statistics
   const statusCounts = useMemo(() => {
     if (!jobs) return {};
     return jobs.reduce(
       (acc, job) => {
         const status = job.status.toLowerCase();
-        acc[status] = (acc[status] || 0) + 1;
+        acc[status] = (acc[status] ?? 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
     );
   }, [jobs]);
+
+  // Calculate advanced statistics
+  const advancedStats = useMemo(() => {
+    if (!jobs || jobs.length === 0) {
+      return {
+        totalApplications: 0,
+        interviewRate: 0,
+        offerRate: 0,
+        responseRate: 0,
+        avgResponseTime: 0,
+        recentActivity: 0,
+      };
+    }
+
+    const total = jobs.length;
+    const interviews = statusCounts.interview ?? 0;
+    const offers = statusCounts.offer ?? 0;
+    const rejected = statusCounts.rejected ?? 0;
+    const responded = interviews + offers + rejected;
+
+    // Calculate recent activity (last 7 days)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const recentJobs = jobs.filter(
+      (job) => new Date(job.createdAt) >= oneWeekAgo,
+    );
+
+    return {
+      totalApplications: total,
+      interviewRate: total > 0 ? Math.round((interviews / total) * 100) : 0,
+      offerRate: total > 0 ? Math.round((offers / total) * 100) : 0,
+      responseRate: total > 0 ? Math.round((responded / total) * 100) : 0,
+      avgResponseTime: 0, // Could be calculated based on date differences
+      recentActivity: recentJobs.length,
+    };
+  }, [jobs, statusCounts]);
 
   const handleDelete = async (job: Job) => {
     if (
@@ -133,6 +167,21 @@ export default function Dashboard() {
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "applied":
+        return "📝"; // Document/Application
+      case "interview":
+        return "🎯"; // Target/Interview
+      case "offer":
+        return "🎉"; // Celebration/Offer
+      case "rejected":
+        return "❌"; // X/Rejection
+      default:
+        return "📋"; // Clipboard/Default
+    }
+  };
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -163,7 +212,8 @@ export default function Dashboard() {
                 Track your job applications and opportunities
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
+              <NotificationReminders />
               <Link
                 href="/upload"
                 className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
@@ -194,7 +244,7 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Jobs</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {jobs?.length || 0}
+                  {jobs?.length ?? 0}
                 </p>
               </div>
             </div>
@@ -210,7 +260,7 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Interviews</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {statusCounts.interview || 0}
+                  {statusCounts.interview ?? 0}
                 </p>
               </div>
             </div>
@@ -226,7 +276,7 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Offers</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {statusCounts.offer || 0}
+                  {statusCounts.offer ?? 0}
                 </p>
               </div>
             </div>
@@ -242,10 +292,79 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Applied</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {statusCounts.applied || 0}
+                  {statusCounts.applied ?? 0}
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Advanced Statistics */}
+        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-medium text-gray-900">
+            Advanced Statistics
+          </h3>
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-blue-600">
+                {advancedStats.interviewRate}%
+              </p>
+              <p className="text-sm text-gray-600">Interview Rate</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-green-600">
+                {advancedStats.offerRate}%
+              </p>
+              <p className="text-sm text-gray-600">Offer Rate</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-purple-600">
+                {advancedStats.responseRate}%
+              </p>
+              <p className="text-sm text-gray-600">Response Rate</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-orange-600">
+                {advancedStats.recentActivity}
+              </p>
+              <p className="text-sm text-gray-600">This Week</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-600">
+                {advancedStats.totalApplications}
+              </p>
+              <p className="text-sm text-gray-600">Total Apps</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Filters for Mobile */}
+        <div className="mb-4 block md:hidden">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilterStatus("all")}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                filterStatus === "all"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              All ({jobs?.length ?? 0})
+            </button>
+            {Object.entries(statusCounts).map(([status, count]) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
+                  filterStatus === status
+                    ? getStatusColor(status)
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                <span className="mr-1">{getStatusIcon(status)}</span>
+                {status} ({count})
+              </button>
+            ))}
           </div>
         </div>
 
@@ -293,7 +412,7 @@ export default function Dashboard() {
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    All ({jobs?.length || 0})
+                    All ({jobs?.length ?? 0})
                   </button>
                   {Object.entries(statusCounts).map(([status, count]) => (
                     <button
@@ -370,7 +489,7 @@ export default function Dashboard() {
         {searchTerm || filterStatus !== "all" ? (
           <div className="mb-4">
             <p className="text-sm text-gray-600">
-              Showing {filteredAndSortedJobs.length} of {jobs?.length || 0} jobs
+              Showing {filteredAndSortedJobs.length} of {jobs?.length ?? 0} jobs
               {searchTerm && ` matching "${searchTerm}"`}
               {filterStatus !== "all" && ` with status "${filterStatus}"`}
             </p>
@@ -425,6 +544,7 @@ export default function Dashboard() {
                   <span
                     className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusColor(job.status)}`}
                   >
+                    <span className="mr-1">{getStatusIcon(job.status)}</span>
                     {job.status}
                   </span>
                 </div>
@@ -533,6 +653,9 @@ export default function Dashboard() {
                         <span
                           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusColor(job.status)}`}
                         >
+                          <span className="mr-1">
+                            {getStatusIcon(job.status)}
+                          </span>
                           {job.status}
                         </span>
                       </td>
