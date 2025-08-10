@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { api } from "~/trpc/react";
@@ -74,6 +74,14 @@ const JOB_TEMPLATES: JobTemplate[] = [
 ];
 
 export default function JobTracker() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading...</div>}>
+      <JobTrackerContent />
+    </Suspense>
+  );
+}
+
+function JobTrackerContent() {
   const searchParams = useSearchParams();
   const uploadedImageUrl = searchParams.get("imageUrl");
   const editJobId = searchParams.get("edit");
