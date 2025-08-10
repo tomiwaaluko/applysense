@@ -30,21 +30,49 @@ export async function extractJobDataWithGPT4Vision(
 
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
+      model: "gpt-4o", // Updated from deprecated gpt-4-vision-preview
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analyze this job application screenshot and extract the following information in JSON format:
-- company: Company name
-- title: Job title/position
-- status: One of "applied", "interview", "offer", "rejected"
-- date: Application date (format: YYYY-MM-DD, use today's date if not visible)
-- notes: Any key highlights, requirements, or important details
+              text: `Analyze this job application screenshot (email, application form, or confirmation page) and extract the following information in JSON format:
 
-Return ONLY valid JSON with these exact field names. If you cannot find certain information, use reasonable defaults or empty strings.`,
+IMPORTANT: Look carefully for:
+- Company name (could be in email headers, signatures, reference numbers, or content like "Thank you for applying to [Company]" or "[Company] Hiring Team")
+  * IGNORE common email greetings like "Dear", "Hello", "Hi", etc.
+  * Look for actual company names like "Ramp", "Google", "Lockheed Martin", "Microsoft", etc.
+  * Check email sender information, reference numbers, or document headers
+  * PAY SPECIAL ATTENTION to words that appear MULTIPLE TIMES throughout the text - companies often repeat their name in subject lines, body text, and signatures
+  * Capitalized words that appear repeatedly are very likely to be company names
+- Job title/position (often mentioned as specific roles with full descriptions)
+  * Look for complete job titles like "Software Engineer Internship | Frontend", "Software Associate Degree Programmer - Entry Level Hourly", etc.
+  * Include specializations, levels, and department information
+
+Examples of what to look for:
+- Company: "Ramp", "Google", "Lockheed Martin", "Microsoft" (NOT "Dear", "Hello", etc.)
+- Position: "Software Engineer Internship | Frontend", "Software Associate Degree Programmer - Entry Level Hourly", "Data Scientist", etc.
+
+Common patterns:
+- "Your candidate reference number - [Company Name]"
+- "Thank you for applying to [Company]"
+- "[Company] Hiring Team"
+- Email from "[Company Name] <email@company.com>"
+- Repeated mentions of company name in subject and body
+
+STRATEGY: If you see a capitalized word (like "Lockheed", "Martin", "Ramp", etc.) appearing multiple times in different parts of the email/document, it's very likely the company name.
+
+Return ONLY valid JSON with these exact field names:
+{
+  "company": "extracted company name (ignore greetings, focus on repeated capitalized words)",
+  "title": "complete job title with specializations",
+  "status": "applied",
+  "date": "YYYY-MM-DD",
+  "notes": "brief summary of key details"
+}
+
+If you cannot find certain information, use empty strings for company/title, "applied" for status, today's date, and a brief note about what type of document this appears to be.`,
             },
             {
               type: "image_url",
@@ -87,10 +115,34 @@ export async function extractTextWithTesseract(
   imageUrl: string,
 ): Promise<string | null> {
   try {
-    const worker = await createWorker("eng");
-    const {
-      data: { text },
-    } = await worker.recognize(imageUrl);
+    console.log("Creating Tesseract worker...");
+
+    // Add timeout to prevent hanging
+    const worker = await Promise.race([
+      createWorker("eng"),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Tesseract worker creation timeout")),
+          30000,
+        ),
+      ),
+    ]);
+
+    console.log("Tesseract worker created, starting recognition...");
+
+    const result = await Promise.race([
+      worker.recognize(imageUrl),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Tesseract recognition timeout")),
+          30000,
+        ),
+      ),
+    ]);
+
+    const text = result.data.text;
+    console.log("Tesseract recognition completed, text length:", text.length);
+
     await worker.terminate();
     return text;
   } catch (error) {
@@ -195,38 +247,53 @@ export function parseJobDataFromText(
 
 /**
  * Main function to extract job data from screenshot
- * Tries GPT-4 Vision first, falls back to Tesseract OCR
+ * Tries GPT-4 Vision first, falls back to Tesseract OCR, then provides manual option
  */
 export async function extractJobDataFromScreenshot(
   imageUrl: string,
 ): Promise<ParsedJobData> {
+  console.log("Starting OCR extraction for image:", imageUrl);
+
   // Try GPT-4 Vision first
   if (env.OPENAI_API_KEY) {
     console.log("Attempting GPT-4 Vision extraction...");
-    const gptResult = await extractJobDataWithGPT4Vision(imageUrl);
-    if (gptResult) {
-      console.log("GPT-4 Vision extraction successful");
-      return gptResult;
+    try {
+      const gptResult = await extractJobDataWithGPT4Vision(imageUrl);
+      if (gptResult) {
+        console.log("GPT-4 Vision extraction successful");
+        return gptResult;
+      }
+    } catch (error) {
+      console.error("GPT-4 Vision failed:", error);
     }
+  } else {
+    console.log("OpenAI API key not found, skipping GPT-4 Vision");
   }
 
-  // Fallback to Tesseract OCR
-  console.log("Falling back to Tesseract OCR...");
-  const extractedText = await extractTextWithTesseract(imageUrl);
-
-  if (extractedText) {
-    console.log("Tesseract OCR successful, parsing text...");
-    return parseJobDataFromText(extractedText, imageUrl);
+  // Check if we're in a browser environment for Tesseract
+  if (typeof window !== "undefined") {
+    console.log("Falling back to Tesseract OCR...");
+    try {
+      const extractedText = await extractTextWithTesseract(imageUrl);
+      if (extractedText) {
+        console.log("Tesseract OCR successful, parsing text...");
+        return parseJobDataFromText(extractedText, imageUrl);
+      }
+    } catch (error) {
+      console.error("Tesseract OCR failed:", error);
+    }
+  } else {
+    console.log("Skipping Tesseract OCR (server-side environment)");
   }
 
-  // Ultimate fallback - return empty data structure
-  console.log("Both OCR methods failed, returning default data");
+  // Ultimate fallback - return default data structure
+  console.log("OCR methods failed or unavailable, returning default data");
   return {
-    company: "Unknown Company",
-    title: "Unknown Position",
+    company: "",
+    title: "",
     status: "applied",
     date: new Date().toISOString().split("T")[0]!,
-    notes: "Failed to extract data from screenshot",
+    notes: "No data extracted - please fill in manually",
     sourceImageUrl: imageUrl,
   };
 }

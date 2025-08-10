@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FileUpload } from "~/components/FileUpload";
 import { api } from "~/trpc/react";
 import type { ParsedJobData } from "~/lib/ocr";
+import { extractJobDataFromScreenshotClient } from "~/lib/ocr-client";
 
 export default function UploadPage() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
@@ -25,11 +26,42 @@ export default function UploadPage() {
     // Automatically start OCR processing
     setIsProcessing(true);
     try {
-      const data = await extractJobData.mutateAsync({ imageUrl });
-      setExtractedData(data);
+      console.log("Starting OCR extraction for:", imageUrl);
+
+      // Try server-side OCR first
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Server OCR timeout (30s)")), 30000),
+      );
+
+      const extractPromise = extractJobData.mutateAsync({ imageUrl });
+
+      try {
+        const data = await Promise.race([extractPromise, timeoutPromise]);
+        console.log("Server OCR extraction completed:", data);
+
+        // Check if server OCR actually extracted useful data
+        if (data.company || data.title) {
+          setExtractedData(data);
+          return;
+        } else {
+          console.log(
+            "Server OCR returned empty data, trying client-side OCR...",
+          );
+        }
+      } catch (serverError) {
+        console.error("Server OCR failed:", serverError);
+        console.log("Falling back to client-side OCR...");
+      }
+
+      // Fallback to client-side OCR
+      const clientData = await extractJobDataFromScreenshotClient(imageUrl);
+      console.log("Client OCR extraction completed:", clientData);
+      setExtractedData(clientData);
     } catch (error) {
-      console.error("OCR extraction failed:", error);
-      // Continue anyway - user can still create job manually
+      console.error("All OCR methods failed:", error);
+      setUploadError(
+        `OCR processing failed: ${error instanceof Error ? error.message : "Unknown error"}. You can still create a job manually.`,
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -204,27 +236,40 @@ export default function UploadPage() {
 
                       {/* Processing State */}
                       {isProcessing && (
-                        <div className="mt-3 flex items-center text-sm text-blue-700">
-                          <svg
-                            className="mr-2 h-4 w-4 animate-spin"
-                            viewBox="0 0 24 24"
+                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center text-sm text-blue-700">
+                            <svg
+                              className="mr-2 h-4 w-4 animate-spin"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                                fill="none"
+                              />
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              />
+                            </svg>
+                            🧠 Analyzing screenshot with AI...
+                          </div>
+                          <button
+                            onClick={() => {
+                              setIsProcessing(false);
+                              setUploadError(
+                                "OCR processing was cancelled. You can still create a job manually.",
+                              );
+                            }}
+                            className="text-xs text-gray-500 underline hover:text-gray-700"
                           >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                              fill="none"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            />
-                          </svg>
-                          🧠 Analyzing screenshot with AI...
+                            Skip AI analysis and continue manually
+                          </button>
                         </div>
                       )}
 
