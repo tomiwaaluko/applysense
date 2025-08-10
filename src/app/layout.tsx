@@ -4,6 +4,9 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import { SessionProvider } from "~/components/SessionProvider";
+import { Navigation } from "~/components/Navigation";
+import { auth } from "~/server/auth";
 
 export const metadata: Metadata = {
   title: "Job Tracker - AI-Powered Application Management",
@@ -17,13 +20,20 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await auth();
+
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <SessionProvider>
+          <TRPCReactProvider>
+            <Navigation user={session?.user} />
+            {children}
+          </TRPCReactProvider>
+        </SessionProvider>
       </body>
     </html>
   );
