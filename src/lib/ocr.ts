@@ -13,7 +13,7 @@ export interface ParsedJobData {
 
 const openai = env.OPENAI_API_KEY
   ? new OpenAI({
-      apiKey: env.OPENAI_API_KEY as string,
+      apiKey: env.OPENAI_API_KEY,
     })
   : null;
 
