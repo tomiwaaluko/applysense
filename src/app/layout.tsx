@@ -1,11 +1,12 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { SessionProvider } from "~/components/SessionProvider";
 import { Navigation } from "~/components/Navigation";
+import { FloatingActionButton } from "~/components/FloatingActionButton";
 import { auth } from "~/server/auth";
 
 export const metadata: Metadata = {
@@ -15,9 +16,10 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const geist = Geist({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export default async function RootLayout({
@@ -26,12 +28,13 @@ export default async function RootLayout({
   const session = await auth();
 
   return (
-    <html lang="en" className={`${geist.variable}`}>
-      <body>
+    <html lang="en" className={`${inter.variable}`}>
+      <body className="font-sans antialiased">
         <SessionProvider>
           <TRPCReactProvider>
             <Navigation user={session?.user} />
             {children}
+            {session?.user && <FloatingActionButton />}
           </TRPCReactProvider>
         </SessionProvider>
       </body>

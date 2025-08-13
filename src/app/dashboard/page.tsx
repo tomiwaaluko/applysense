@@ -6,6 +6,14 @@ import Link from "next/link";
 import { api } from "~/trpc/react";
 import { deleteScreenshot } from "~/lib/upload";
 import { NotificationReminders } from "~/components/NotificationReminders";
+import {
+  DashboardIcon,
+  BriefcaseIcon,
+  PhotoIcon,
+  TrendingUpIcon,
+  SparkleIcon,
+  PlusIcon,
+} from "~/components/icons";
 
 type Job = {
   id: string;
@@ -155,30 +163,30 @@ export default function Dashboard() {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "applied":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-blue-50 text-blue-700 border border-blue-200";
       case "interview":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
       case "offer":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-50 text-green-700 border border-green-200";
       case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-red-50 text-red-700 border border-red-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-gray-50 text-gray-700 border border-gray-200";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "applied":
-        return "📝"; // Document/Application
+        return <BriefcaseIcon className="h-3 w-3" />;
       case "interview":
-        return "🎯"; // Target/Interview
+        return <SparkleIcon className="h-3 w-3" />;
       case "offer":
-        return "🎉"; // Celebration/Offer
+        return <TrendingUpIcon className="h-3 w-3" />;
       case "rejected":
-        return "❌"; // X/Rejection
+        return "❌";
       default:
-        return "📋"; // Clipboard/Default
+        return <DashboardIcon className="h-3 w-3" />;
     }
   };
 
@@ -192,39 +200,53 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
+      <div className="bg-gradient-hero flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
+          <p className="font-medium text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gradient-hero min-h-screen">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
+      <div className="glass-card sticky top-20 z-40 border-b border-gray-200/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Job Dashboard
-              </h1>
-              <p className="mt-1 text-gray-600">
-                Track your job applications and opportunities
-              </p>
+          <div className="flex items-center justify-between py-8">
+            <div className="animate-slide-in-left">
+              <div className="mb-2 flex items-center space-x-4">
+                <div className="bg-gradient-primary flex h-12 w-12 items-center justify-center rounded-2xl">
+                  <DashboardIcon className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Job Dashboard
+                  </h1>
+                  <p className="text-gray-600">
+                    Track your applications and opportunities
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="animate-slide-in-right flex items-center gap-4">
               <NotificationReminders />
               <Link
                 href="/upload"
-                className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+                className="btn-accent group inline-flex items-center space-x-2"
               >
-                📸 Upload Screenshot
+                <PhotoIcon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                <span className="hidden sm:inline">Upload Screenshot</span>
+                <span className="sm:hidden">Upload</span>
               </Link>
               <Link
                 href="/jobs"
-                className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                className="btn-secondary group inline-flex items-center space-x-2"
               >
-                + Add Job Manually
+                <PlusIcon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                <span className="hidden sm:inline">Add Manually</span>
+                <span className="sm:hidden">Add</span>
               </Link>
             </div>
           </div>
@@ -233,65 +255,57 @@ export default function Dashboard() {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Stats Overview */}
-        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+        <div className="animate-fade-in-up mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="feature-card p-6">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <span className="font-semibold text-blue-600">📊</span>
-                </div>
+              <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600">
+                <DashboardIcon className="h-6 w-6 text-white" />
               </div>
-              <div className="ml-4">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Total Jobs</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900">
                   {jobs?.length ?? 0}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="feature-card p-6">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100">
-                  <span className="font-semibold text-yellow-600">🎯</span>
-                </div>
+              <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-500 to-yellow-600">
+                <SparkleIcon className="h-6 w-6 text-white" />
               </div>
-              <div className="ml-4">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Interviews</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900">
                   {statusCounts.interview ?? 0}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="feature-card p-6">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                  <span className="font-semibold text-green-600">🎉</span>
-                </div>
+              <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600">
+                <TrendingUpIcon className="h-6 w-6 text-white" />
               </div>
-              <div className="ml-4">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Offers</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900">
                   {statusCounts.offer ?? 0}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <div className="feature-card p-6">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                  <span className="font-semibold text-blue-600">📝</span>
-                </div>
+              <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600">
+                <BriefcaseIcon className="h-6 w-6 text-white" />
               </div>
-              <div className="ml-4">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Applied</p>
-                <p className="text-2xl font-semibold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900">
                   {statusCounts.applied ?? 0}
                 </p>
               </div>
@@ -300,40 +314,56 @@ export default function Dashboard() {
         </div>
 
         {/* Advanced Statistics */}
-        <div className="mb-8 rounded-lg border border-gray-200 bg-white p-6">
-          <h3 className="mb-4 text-lg font-medium text-gray-900">
-            Advanced Statistics
+        <div
+          className="feature-card animate-fade-in-up mb-8 p-8"
+          style={{ animationDelay: "0.2s" }}
+        >
+          <h3 className="mb-6 flex items-center text-xl font-bold text-gray-900">
+            <TrendingUpIcon className="mr-3 h-6 w-6 text-blue-600" />
+            Success Metrics
           </h3>
           <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
             <div className="text-center">
-              <p className="text-2xl font-semibold text-blue-600">
-                {advancedStats.interviewRate}%
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600">
+                <span className="text-2xl font-bold text-white">
+                  {advancedStats.interviewRate}%
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-600">
+                Interview Rate
               </p>
-              <p className="text-sm text-gray-600">Interview Rate</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-semibold text-green-600">
-                {advancedStats.offerRate}%
-              </p>
-              <p className="text-sm text-gray-600">Offer Rate</p>
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-600">
+                <span className="text-2xl font-bold text-white">
+                  {advancedStats.offerRate}%
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-600">Offer Rate</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-semibold text-purple-600">
-                {advancedStats.responseRate}%
-              </p>
-              <p className="text-sm text-gray-600">Response Rate</p>
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600">
+                <span className="text-2xl font-bold text-white">
+                  {advancedStats.responseRate}%
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-600">Response Rate</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-semibold text-orange-600">
-                {advancedStats.recentActivity}
-              </p>
-              <p className="text-sm text-gray-600">This Week</p>
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600">
+                <span className="text-2xl font-bold text-white">
+                  {advancedStats.recentActivity}
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-600">This Week</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-semibold text-gray-600">
-                {advancedStats.totalApplications}
-              </p>
-              <p className="text-sm text-gray-600">Total Apps</p>
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-500 to-gray-600">
+                <span className="text-2xl font-bold text-white">
+                  {advancedStats.totalApplications}
+                </span>
+              </div>
+              <p className="text-sm font-medium text-gray-600">Total Apps</p>
             </div>
           </div>
         </div>
@@ -343,10 +373,10 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setFilterStatus("all")}
-              className={`rounded-full px-3 py-1 text-xs font-medium ${
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                 filterStatus === "all"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-600"
+                  ? "border border-blue-200 bg-blue-100 text-blue-800"
+                  : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
               All ({jobs?.length ?? 0})
@@ -355,26 +385,31 @@ export default function Dashboard() {
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
+                className={`flex items-center space-x-1 rounded-full px-4 py-2 text-sm font-medium capitalize transition-all duration-200 ${
                   filterStatus === status
                     ? getStatusColor(status)
-                    : "bg-gray-100 text-gray-600"
+                    : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                 }`}
               >
-                <span className="mr-1">{getStatusIcon(status)}</span>
-                {status} ({count})
+                <span>{getStatusIcon(status)}</span>
+                <span>
+                  {status} ({count})
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Controls */}
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div
+          className="feature-card animate-fade-in-up mb-8 p-6"
+          style={{ animationDelay: "0.4s" }}
+        >
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             {/* Search */}
             <div className="max-w-md flex-1">
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                   <svg
                     className="h-5 w-5 text-gray-400"
                     viewBox="0 0 20 20"
@@ -392,24 +427,24 @@ export default function Dashboard() {
                   placeholder="Search jobs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 bg-white py-2 pr-3 pl-10 leading-5 placeholder-gray-500 focus:border-blue-500 focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="block w-full rounded-2xl border border-gray-200 bg-white py-3 pr-4 pl-12 text-gray-900 placeholder-gray-500 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
               {/* Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
+              <div className="hidden items-center gap-3 md:flex">
+                <span className="text-sm font-semibold text-gray-700">
                   Filter:
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setFilterStatus("all")}
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       filterStatus === "all"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        ? "border border-blue-200 bg-blue-100 text-blue-800"
+                        : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                     }`}
                   >
                     All ({jobs?.length ?? 0})
@@ -418,21 +453,26 @@ export default function Dashboard() {
                     <button
                       key={status}
                       onClick={() => setFilterStatus(status)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
+                      className={`flex items-center space-x-1 rounded-full px-4 py-2 text-sm font-medium capitalize transition-all duration-200 ${
                         filterStatus === status
                           ? getStatusColor(status)
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          : "border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
                       }`}
                     >
-                      {status} ({count})
+                      <span>{getStatusIcon(status)}</span>
+                      <span>
+                        {status} ({count})
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Sort */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Sort:</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-700">
+                  Sort:
+                </span>
                 <select
                   value={`${sortBy}-${sortOrder}`}
                   onChange={(e) => {
@@ -442,7 +482,7 @@ export default function Dashboard() {
                     setSortBy(newSortBy);
                     setSortOrder(newSortOrder);
                   }}
-                  className="rounded-md border border-gray-300 bg-white px-3 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 >
                   <option value="date-desc">Newest First</option>
                   <option value="date-asc">Oldest First</option>
@@ -456,25 +496,27 @@ export default function Dashboard() {
               </div>
 
               {/* View Toggle */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">View:</span>
-                <div className="flex rounded-md border border-gray-300">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-700">
+                  View:
+                </span>
+                <div className="flex rounded-xl border border-gray-200 bg-white p-1">
                   <button
                     onClick={() => setViewMode("cards")}
-                    className={`px-3 py-1 text-sm font-medium ${
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       viewMode === "cards"
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "bg-blue-100 text-blue-700 shadow-sm"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                     }`}
                   >
                     Cards
                   </button>
                   <button
                     onClick={() => setViewMode("table")}
-                    className={`border-l border-gray-300 px-3 py-1 text-sm font-medium ${
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       viewMode === "table"
-                        ? "bg-blue-100 text-blue-700"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "bg-blue-100 text-blue-700 shadow-sm"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                     }`}
                   >
                     Table
@@ -487,84 +529,111 @@ export default function Dashboard() {
 
         {/* Results count */}
         {searchTerm || filterStatus !== "all" ? (
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              Showing {filteredAndSortedJobs.length} of {jobs?.length ?? 0} jobs
-              {searchTerm && ` matching "${searchTerm}"`}
-              {filterStatus !== "all" && ` with status "${filterStatus}"`}
-            </p>
+          <div className="mb-6">
+            <div className="glass-card rounded-xl p-4">
+              <p className="text-sm font-medium text-gray-700">
+                Showing{" "}
+                <span className="font-bold text-blue-600">
+                  {filteredAndSortedJobs.length}
+                </span>{" "}
+                of <span className="font-bold">{jobs?.length ?? 0}</span> jobs
+                {searchTerm && (
+                  <span className="text-gray-500">
+                    {" "}
+                    matching &ldquo;
+                    <span className="font-medium">{searchTerm}</span>&rdquo;
+                  </span>
+                )}
+                {filterStatus !== "all" && (
+                  <span className="text-gray-500">
+                    {" "}
+                    with status &ldquo;
+                    <span className="font-medium capitalize">
+                      {filterStatus}
+                    </span>
+                    &rdquo;
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
         ) : null}
 
         {/* Content */}
         {filteredAndSortedJobs.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
-            </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">
-              No jobs found
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || filterStatus !== "all"
-                ? "Try adjusting your search or filter criteria."
-                : "Get started by uploading a job screenshot or adding a job manually."}
-            </p>
-            <div className="mt-6">
-              <Link
-                href="/upload"
-                className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-              >
-                📸 Upload Screenshot
-              </Link>
+          <div className="animate-fade-in-up py-16 text-center">
+            <div className="feature-card mx-auto max-w-md p-12">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500">
+                <BriefcaseIcon className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-gray-900">
+                No jobs found
+              </h3>
+              <p className="mb-8 leading-relaxed text-gray-600">
+                {searchTerm || filterStatus !== "all"
+                  ? "Try adjusting your search or filter criteria to find what you're looking for."
+                  : "Get started by uploading a job screenshot or adding a job manually to begin tracking your applications."}
+              </p>
+              <div className="space-y-3">
+                <Link
+                  href="/upload"
+                  className="btn-primary group inline-flex w-full items-center justify-center space-x-2"
+                >
+                  <PhotoIcon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                  <span>Upload Screenshot</span>
+                </Link>
+                <Link
+                  href="/jobs"
+                  className="btn-secondary group inline-flex w-full items-center justify-center space-x-2"
+                >
+                  <PlusIcon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                  <span>Add Job Manually</span>
+                </Link>
+              </div>
             </div>
           </div>
         ) : viewMode === "cards" ? (
           /* Card View */
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAndSortedJobs.map((job) => (
+          <div className="animate-fade-in-up grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredAndSortedJobs.map((job, index) => (
               <div
                 key={job.id}
-                className="rounded-lg border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md"
+                className="feature-card group"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="mb-4 flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="mb-1 text-lg font-semibold text-gray-900">
+                <div className="mb-6 flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="mb-2 text-xl font-bold text-gray-900 transition-colors duration-200 group-hover:text-blue-600">
                       {job.title}
                     </h3>
-                    <p className="font-medium text-gray-600">{job.company}</p>
+                    <p className="mb-3 text-lg font-semibold text-gray-700">
+                      {job.company}
+                    </p>
                   </div>
                   <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusColor(job.status)}`}
+                    className={`inline-flex items-center space-x-1 rounded-full px-3 py-1 text-sm font-medium transition-all duration-200 ${getStatusColor(job.status)}`}
                   >
-                    <span className="mr-1">{getStatusIcon(job.status)}</span>
-                    {job.status}
+                    <span>{getStatusIcon(job.status)}</span>
+                    <span className="capitalize">{job.status}</span>
                   </span>
                 </div>
 
                 {job.imageUrl && (
-                  <div className="mb-4">
+                  <div className="mb-6">
                     <Image
                       src={job.imageUrl}
                       alt={`Screenshot for ${job.company} ${job.title}`}
                       width={300}
                       height={200}
-                      className="h-32 w-full rounded-md border border-gray-200 object-cover"
+                      className="h-40 w-full rounded-xl border border-gray-200 object-cover transition-all duration-300 group-hover:shadow-md"
                     />
                   </div>
                 )}
 
-                <div className="mb-4 space-y-2">
+                <div className="mb-6 space-y-3">
                   <div className="flex items-center text-sm text-gray-600">
                     <svg
-                      className="mr-2 h-4 w-4"
+                      className="mr-3 h-5 w-5 text-blue-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -576,29 +645,31 @@ export default function Dashboard() {
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    {formatDate(job.date)}
+                    <span className="font-medium">{formatDate(job.date)}</span>
                   </div>
                   {job.notes && (
-                    <div className="text-sm text-gray-600">
-                      <p className="line-clamp-2">{job.notes}</p>
+                    <div className="rounded-xl bg-gray-50 p-3">
+                      <p className="line-clamp-3 text-sm leading-relaxed text-gray-700">
+                        {job.notes}
+                      </p>
                     </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs font-medium text-gray-500">
                     Added {formatDate(job.createdAt)}
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <Link
                       href={`/jobs?edit=${job.id}`}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      className="text-sm font-semibold text-blue-600 transition-colors duration-200 hover:text-blue-700"
                     >
                       Edit
                     </Link>
                     <button
                       onClick={() => handleDelete(job)}
-                      className="text-sm font-medium text-red-600 hover:text-red-700"
+                      className="text-sm font-semibold text-red-600 transition-colors duration-200 hover:text-red-700"
                     >
                       Delete
                     </button>
@@ -609,85 +680,89 @@ export default function Dashboard() {
           </div>
         ) : (
           /* Table View */
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <div className="feature-card animate-fade-in-up overflow-hidden p-0">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
-                      Job
+                    <th className="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
+                      Job Details
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                    <th className="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                    <th className="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                       Date Applied
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                    <th className="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                       Screenshot
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                    <th className="px-6 py-4 text-left text-xs font-bold tracking-wider text-gray-700 uppercase">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {filteredAndSortedJobs.map((job) => (
-                    <tr key={job.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
+                  {filteredAndSortedJobs.map((job, index) => (
+                    <tr
+                      key={job.id}
+                      className="transition-colors duration-200 hover:bg-blue-50/50"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                    >
+                      <td className="px-6 py-6">
+                        <div className="max-w-sm">
+                          <div className="mb-1 text-lg font-bold text-gray-900">
                             {job.title}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="mb-2 text-base font-semibold text-gray-700">
                             {job.company}
                           </div>
                           {job.notes && (
-                            <div className="mt-1 max-w-xs truncate text-xs text-gray-400">
-                              {job.notes}
+                            <div className="mt-2 rounded-lg bg-gray-50 p-2 text-sm text-gray-600">
+                              <p className="line-clamp-2">{job.notes}</p>
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-6">
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${getStatusColor(job.status)}`}
+                          className={`inline-flex items-center space-x-1 rounded-full px-3 py-1 text-sm font-medium ${getStatusColor(job.status)}`}
                         >
-                          <span className="mr-1">
-                            {getStatusIcon(job.status)}
-                          </span>
-                          {job.status}
+                          <span>{getStatusIcon(job.status)}</span>
+                          <span className="capitalize">{job.status}</span>
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
+                      <td className="px-6 py-6 text-sm font-medium text-gray-900">
                         {formatDate(job.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-6">
                         {job.imageUrl ? (
                           <Image
                             src={job.imageUrl}
                             alt={`Screenshot for ${job.company}`}
-                            width={60}
-                            height={40}
-                            className="h-10 w-16 rounded border border-gray-200 object-cover"
+                            width={80}
+                            height={60}
+                            className="h-16 w-20 rounded-lg border border-gray-200 object-cover shadow-sm transition-shadow duration-200 hover:shadow-md"
                           />
                         ) : (
-                          <span className="text-sm text-gray-400">
-                            No image
-                          </span>
+                          <div className="flex h-16 w-20 items-center justify-center rounded-lg border-2 border-dashed border-gray-300">
+                            <span className="text-xs font-medium text-gray-400">
+                              No image
+                            </span>
+                          </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                        <div className="flex gap-3">
+                      <td className="px-6 py-6">
+                        <div className="flex gap-4">
                           <Link
                             href={`/jobs?edit=${job.id}`}
-                            className="text-blue-600 hover:text-blue-700"
+                            className="text-sm font-semibold text-blue-600 transition-colors duration-200 hover:text-blue-700"
                           >
                             Edit
                           </Link>
                           <button
                             onClick={() => handleDelete(job)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-sm font-semibold text-red-600 transition-colors duration-200 hover:text-red-700"
                           >
                             Delete
                           </button>
