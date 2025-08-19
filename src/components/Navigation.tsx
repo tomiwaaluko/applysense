@@ -28,7 +28,7 @@ export function Navigation({ user }: NavigationProps) {
                   <BriefcaseIcon className="h-6 w-6 text-white" />
                 </div>
                 <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-2xl font-bold text-transparent">
-                  Job Tracker
+                  ApplySense
                 </span>
               </Link>
             </div>
@@ -57,7 +57,7 @@ export function Navigation({ user }: NavigationProps) {
                 <BriefcaseIcon className="h-6 w-6 text-white" />
               </div>
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-2xl font-bold text-transparent">
-                Job Tracker
+                ApplySense
               </span>
             </Link>
           </div>

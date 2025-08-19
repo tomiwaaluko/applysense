@@ -220,7 +220,7 @@ function JobTrackerContent() {
   return (
     <div className="mx-auto max-w-6xl p-8">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Job Tracker</h1>
+        <h1 className="text-3xl font-bold">ApplySense</h1>
         <div className="flex gap-3">
           <a
             href="/dashboard"

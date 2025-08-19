@@ -17,7 +17,7 @@ export const PageLoader: React.FC = () => (
   <div className="bg-gradient-hero flex min-h-screen items-center justify-center">
     <div className="text-center">
       <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
-      <p className="font-medium text-gray-600">Loading your job tracker...</p>
+      <p className="font-medium text-gray-600">Loading your ApplySense...</p>
     </div>
   </div>
 );

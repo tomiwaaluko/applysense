@@ -10,7 +10,7 @@ import { FloatingActionButton } from "~/components/FloatingActionButton";
 import { auth } from "~/server/auth";
 
 export const metadata: Metadata = {
-  title: "Job Tracker - AI-Powered Application Management",
+  title: "ApplySense - AI-Powered Application Management",
   description:
     "Track your job applications with AI-powered screenshot analysis. Upload job postings and let AI extract details automatically.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
